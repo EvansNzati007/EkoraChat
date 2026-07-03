@@ -1,0 +1,27 @@
+# Node / NestJS
+backend/node_modules/
+backend/dist/
+backend/coverage/
+
+# Environnement — jamais versionné
+backend/.env
+backend/.env.*
+
+# Prisma — client généré
+backend/generated/
+backend/src/generated/
+
+# Android / Kotlin (pour plus tard)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+
+# IDE & OS
+.idea/
+.vscode/
+*.log
+.DS_Store
