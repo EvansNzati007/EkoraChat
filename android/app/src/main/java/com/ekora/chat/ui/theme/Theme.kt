@@ -1,58 +1,36 @@
 package com.ekora.chat.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+private val EkoraLightColorScheme = lightColorScheme(
+    primary = Color(0xFF1B7A43),            // vert EkoraChat
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFB9F0CD),   // bulles de MES messages
+    onPrimaryContainer = Color(0xFF00210F),
+    secondary = Color(0xFF4E6355),
     onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    background = Color(0xFFF6FBF4),
+    onBackground = Color(0xFF171D19),
+    surface = Color(0xFFF6FBF4),
+    onSurface = Color(0xFF171D19),
+    surfaceVariant = Color(0xFFDDE5DB),     // bulles des messages reçus
+    onSurfaceVariant = Color(0xFF414942),
+    outline = Color(0xFF717970),            // bordures des OutlinedTextField
+    error = Color(0xFFBA1A1A),
 )
 
 @Composable
 fun EkoraChatTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
+    darkTheme: Boolean = false,
+    dynamicColor: Boolean = false,
+    content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = EkoraLightColorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }

@@ -3,45 +3,36 @@ package com.ekora.chat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.*
+import com.ekora.chat.ui.*
 import com.ekora.chat.ui.theme.EkoraChatTheme
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             EkoraChatTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val nav = rememberNavController()
+                NavHost(nav, startDestination = "login") {
+                    composable("login") {
+                        LoginScreen(onLoggedIn = {
+                            nav.navigate("conversations") { popUpTo("login") { inclusive = true } }
+                        })
+                    }
+                    composable("conversations") {
+                        ConversationsScreen(onOpenChat = { id, title ->
+                            nav.navigate("chat/$id/${URLEncoder.encode(title, "UTF-8")}")
+                        })
+                    }
+                    composable("chat/{id}/{title}") { entry ->
+                        val id = entry.arguments?.getString("id") ?: return@composable
+                        val title = URLDecoder.decode(entry.arguments?.getString("title") ?: "", "UTF-8")
+                        ChatScreen(id, title, onBack = { nav.popBackStack() })
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EkoraChatTheme {
-        Greeting("Android")
     }
 }
