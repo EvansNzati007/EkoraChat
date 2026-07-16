@@ -1,0 +1,17 @@
+# docker-compose.yml à la racine de backend/
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ekorachat-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ekora
+      POSTGRES_PASSWORD: ekora_dev
+      POSTGRES_DB: ekorachat
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

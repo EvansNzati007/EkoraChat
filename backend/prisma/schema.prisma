@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ConversationType {
+  PRIVATE
+  AI
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  AUDIO
+  FILE
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  avatar    String?
+  isBot     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  contacts     Contact[]                 @relation("owner")
+  contactOf    Contact[]                 @relation("target")
+  participants ConversationParticipant[]
+  sentMessages Message[]
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  nickname  String?
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User   @relation("owner", fields: [userId], references: [id])
+  contactId String
+  contact   User   @relation("target", fields: [contactId], references: [id])
+
+  @@unique([userId, contactId])
+}
+
+model Conversation {
+  id        String           @id @default(uuid())
+  type      ConversationType @default(PRIVATE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  joinedAt       DateTime     @default(now())
+
+  @@id([userId, conversationId])
+}
+
+model Message {
+  id        String        @id @default(uuid())
+  content   String?
+  type      MessageType   @default(TEXT)
+  mediaUrl  String?
+  status    MessageStatus @default(SENT)
+  createdAt DateTime      @default(now())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+}
