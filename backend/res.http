@@ -1,0 +1,35 @@
+### Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "evans@test.com",
+  "password": "123456"
+}
+### Trouver paule
+GET http://localhost:3000/users/search?username=paule
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjEzNjIwLCJleHAiOjE3ODQzMDAwMjB9.1r1DUKOwXk3gvJmdevrdehyXqkvCFXH8__dNsBuM5uQ
+
+### Conversation privée avec paule
+POST http://localhost:3000/conversations
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjEzNjIwLCJleHAiOjE3ODQzMDAwMjB9.1r1DUKOwXk3gvJmdevrdehyXqkvCFXH8__dNsBuM5uQ
+
+{ "participantId": "909bfcd8-538c-42e6-8b20-8555784acbba" }
+
+### Envoyer un message à paule
+POST http://localhost:3000/conversations/70e15d9f-727c-4871-8354-03c7a67408a3/messages
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjEzNjIwLCJleHAiOjE3ODQzMDAwMjB9.1r1DUKOwXk3gvJmdevrdehyXqkvCFXH8__dNsBuM5uQ
+
+{ "content": "Salut Paule !" }
+
+### Côté paule : login puis lister ses conversations
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "paule@test.com", "password": "123456" }
+
+### Paule voit la conversation et le message
+GET http://localhost:3000/conversations
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MDliZmNkOC01MzhjLTQyZTYtOGIyMC04NTU1Nzg0YWNiYmEiLCJ1c2VybmFtZSI6InBhdWxlIiwiaWF0IjoxNzg0MjEzNzM3LCJleHAiOjE3ODQzMDAxMzd9.yI7qVygM3-kytTjvIuOX8UEp7LGDZTypDZrnjzyLrGQ

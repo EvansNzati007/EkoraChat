@@ -16,3 +16,42 @@ Content-Type: application/json
   "email": "evans@test.com",
   "password": "123456"
 }
+
+### Register user 2
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "email": "paule@test.com", "username": "paule", "password": "123456" }
+
+### Add contact
+POST http://localhost:3000/contacts
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjEwNzk5LCJleHAiOjE3ODQyOTcxOTl9.yUcFffvymIHeh7Rku6bhrfPi5iwMzXovuCq9qzGwqrw
+
+{ "username": "paule" }
+
+### List contacts
+GET http://localhost:3000/contacts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjEwNzk5LCJleHAiOjE3ODQyOTcxOTl9.yUcFffvymIHeh7Rku6bhrfPi5iwMzXovuCq9qzGwqrw
+
+### Créer conversation IA
+# @name createAI
+POST http://localhost:3000/conversations/ai
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjExMzc0LCJleHAiOjE3ODQyOTc3NzR9.QrYSPZ8SE-JCXTNSF5PToWItkEx8Tkegx1wkDl5TgbM
+
+### Parler à l'IA
+POST http://localhost:3000/conversations/7f8f25ec-7c6f-461d-a453-00ae4a33b8fc/messages
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NzE2ODg0My1iNGIxLTQwYjEtODdmNC0zYzE4ODA0Mjg0YWEiLCJ1c2VybmFtZSI6ImV2YW5zIiwiaWF0IjoxNzg0MjIwNDM4LCJleHAiOjE3ODQzMDY4Mzh9.AyA-IpQRHAeC_zcpfqvhTWmNDhEBZt0dGa7PJIWRVnc
+
+{ "content": "Salut, présente-toi en une phrase !" }
+
+### Conversation privée avec paule (utilise son userId)
+POST http://localhost:3000/conversations
+Content-Type: application/json
+
+{ "participantId": "USER_ID_DE_PAULE" }
+
+### Lister mes conversations
+GET http://localhost:3000/conversations
+Authorization: Bearer TON_TOKEN
