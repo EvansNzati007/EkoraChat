@@ -65,3 +65,9 @@ Content-Type: application/json
 ### Lister mes conversations
 GET http://localhost:3000/conversations
 Authorization: Bearer TON_TOKEN
+
+### Register sur Railway
+POST https://ekorachat-production.up.railway.app/auth/register
+Content-Type: application/json
+
+{ "email": "elise@test.com", "username": "elise", "password": "123456" }
