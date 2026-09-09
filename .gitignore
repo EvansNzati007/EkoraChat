@@ -11,6 +11,10 @@ backend/.env.*
 backend/generated/
 backend/src/generated/
 
+# Fichiers/médias uploadés (persistés via volume Railway en prod)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # Android / Kotlin (pour plus tard)
 android/.gradle/
 android/build/

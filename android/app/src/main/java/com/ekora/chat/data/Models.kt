@@ -26,6 +26,7 @@ data class MessageDto(
     val id: String,
     val content: String?,
     val type: String,
+    val mediaUrl: String? = null,
     val createdAt: String,
     val senderId: String,
     val sender: UserDto,
@@ -33,4 +34,5 @@ data class MessageDto(
 
 data class SendMessageRequest(val content: String)
 data class SendMessageResponse(val message: MessageDto, val aiMessage: MessageDto? = null)
+data class SendMediaResponse(val message: MessageDto)
 data class CreatePrivateRequest(val participantId: String)

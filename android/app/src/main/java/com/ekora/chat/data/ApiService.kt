@@ -1,5 +1,7 @@
 package com.ekora.chat.data
 
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -35,4 +37,13 @@ interface ApiService {
         @Path("id") conversationId: String,
         @Body body: SendMessageRequest,
     ): SendMessageResponse
+
+    @Multipart
+    @POST("conversations/{id}/messages/media")
+    suspend fun sendMedia(
+        @Path("id") conversationId: String,
+        @Part file: MultipartBody.Part,
+        @Part("type") type: RequestBody,
+        @Part("content") content: RequestBody?,
+    ): SendMediaResponse
 }
