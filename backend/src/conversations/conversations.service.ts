@@ -77,7 +77,14 @@ export class ConversationsService {
         participants: {
           include: {
             user: {
-              select: { id: true, username: true, avatar: true, isBot: true },
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                isBot: true,
+                isOnline: true,
+                lastSeenAt: true,
+              },
             },
           },
         },

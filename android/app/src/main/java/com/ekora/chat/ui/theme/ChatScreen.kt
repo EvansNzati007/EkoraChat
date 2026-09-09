@@ -13,12 +13,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
@@ -43,6 +47,11 @@ import java.io.File
 private fun mediaUrlOf(path: String?): String? =
     path?.let { SocketManager.MEDIA_BASE_URL + it }
 
+private fun formatDuration(ms: Int): String {
+    val totalSeconds = ms / 1000
+    return "%d:%02d".format(totalSeconds / 60, totalSeconds % 60)
+}
+
 private fun queryFileName(context: android.content.Context, uri: Uri): String {
     var name = "fichier"
     context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -52,9 +61,55 @@ private fun queryFileName(context: android.content.Context, uri: Uri): String {
     return name
 }
 
+private fun parseIsoUtc(iso: String): java.util.Date? = try {
+    java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+        .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+        .parse(iso.substringBefore('.'))
+} catch (_: Exception) {
+    null
+}
+
+private fun formatTime(iso: String): String {
+    val date = parseIsoUtc(iso) ?: return ""
+    return java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(date)
+}
+
+private fun isSameDay(a: java.util.Date, b: java.util.Date): Boolean {
+    val ca = java.util.Calendar.getInstance().apply { time = a }
+    val cb = java.util.Calendar.getInstance().apply { time = b }
+    return ca.get(java.util.Calendar.YEAR) == cb.get(java.util.Calendar.YEAR) &&
+        ca.get(java.util.Calendar.DAY_OF_YEAR) == cb.get(java.util.Calendar.DAY_OF_YEAR)
+}
+
+private fun dayLabel(iso: String): String {
+    val date = parseIsoUtc(iso) ?: return ""
+    val now = java.util.Date()
+    val yesterday = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, -1) }.time
+    return when {
+        isSameDay(date, now) -> "Aujourd'hui"
+        isSameDay(date, yesterday) -> "Hier"
+        else -> java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale.FRENCH).format(date)
+    }
+}
+
+private fun presenceLabel(event: PresenceEvent?): String? {
+    if (event == null) return null
+    if (event.isOnline) return "En ligne"
+    val lastSeen = event.lastSeenAt ?: return null
+    return try {
+        val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+            .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+        val date = parser.parse(lastSeen.substringBefore('.')) ?: return null
+        val formatter = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        "Vu à ${formatter.format(date)}"
+    } catch (_: Exception) {
+        null
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(conversationId: String, title: String, onBack: () -> Unit) {
+fun ChatScreen(conversationId: String, title: String, otherUserId: String?, onBack: () -> Unit) {
     val context = LocalContext.current
     var messages by remember { mutableStateOf<List<MessageDto>>(emptyList()) }
     var input by remember { mutableStateOf("") }
@@ -72,7 +127,16 @@ fun ChatScreen(conversationId: String, title: String, onBack: () -> Unit) {
     // WebSocket : réception instantanée des nouveaux messages (le serveur ne
     // diffuse qu'aux membres de la room "conversation:<id>" rejointe ci-dessous)
     DisposableEffect(conversationId) {
-        SocketManager.connect { incoming -> mergeIncoming(incoming) }
+        SocketManager.connect(
+            onNewMessage = { incoming -> mergeIncoming(incoming) },
+            onMessagesRead = { event ->
+                if (event.conversationId == conversationId) {
+                    messages = messages.map {
+                        if (it.senderId == Session.userId) it.copy(status = "READ") else it
+                    }
+                }
+            },
+        )
         SocketManager.joinConversation(conversationId)
         onDispose { }
     }
@@ -170,11 +234,24 @@ fun ChatScreen(conversationId: String, title: String, onBack: () -> Unit) {
         }
     }
 
+    val presence = otherUserId?.let { PresenceStore.get(it) }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title) },
-                navigationIcon = { TextButton(onBack) { Text("←") } },
+                title = {
+                    Column {
+                        Text(title)
+                        presenceLabel(presence)?.let {
+                            Text(it, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
             )
         },
         bottomBar = {
@@ -197,7 +274,7 @@ fun ChatScreen(conversationId: String, title: String, onBack: () -> Unit) {
                     enabled = !isRecording,
                 )
                 Spacer(Modifier.width(8.dp))
-                Button(
+                IconButton(
                     enabled = input.isNotBlank() && !sending && !isRecording,
                     onClick = {
                         val text = input.trim(); input = ""; sending = true
@@ -209,12 +286,19 @@ fun ChatScreen(conversationId: String, title: String, onBack: () -> Unit) {
                             } catch (_: Exception) {} finally { sending = false }
                         }
                     },
-                ) { Text(if (sending) "..." else "➤") }
+                ) { Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Envoyer") }
             }
         },
     ) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize().padding(horizontal = 8.dp), state = listState) {
-            items(messages, key = { it.id }) { m ->
+            itemsIndexed(messages, key = { _, m -> m.id }) { index, m ->
+                val previous = messages.getOrNull(index - 1)
+                val previousDate = previous?.let { parseIsoUtc(it.createdAt) }
+                val currentDate = parseIsoUtc(m.createdAt)
+                if (currentDate == null || previousDate == null || !isSameDay(previousDate, currentDate)) {
+                    DayDivider(dayLabel(m.createdAt))
+                }
+
                 val isMine = m.senderId == Session.userId
                 Row(
                     Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -232,9 +316,43 @@ fun ChatScreen(conversationId: String, title: String, onBack: () -> Unit) {
                     ) {
                         if (!isMine) Text(m.sender.username, style = MaterialTheme.typography.labelSmall)
                         MessageBody(m)
+                        Row(
+                            modifier = Modifier.align(Alignment.End).padding(top = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                formatTime(m.createdAt),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            if (isMine) {
+                                Spacer(Modifier.width(2.dp))
+                                Icon(
+                                    if (m.status == "READ") Icons.Filled.DoneAll else Icons.Filled.Done,
+                                    contentDescription = if (m.status == "READ") "Lu" else "Envoyé",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (m.status == "READ") MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DayDivider(label: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = Spacing.sm), horizontalArrangement = Arrangement.Center) {
+        Box(
+            Modifier
+                .clip(RoundedCornerShape(50))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(horizontal = Spacing.sm, vertical = 4.dp),
+        ) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -251,24 +369,65 @@ private fun MessageBody(m: MessageDto) {
         "AUDIO" -> {
             var player by remember { mutableStateOf<MediaPlayer?>(null) }
             var playing by remember { mutableStateOf(false) }
+            var loading by remember { mutableStateOf(false) }
+            var durationMs by remember { mutableStateOf(0) }
+            var positionMs by remember { mutableStateOf(0) }
+
+            fun release() {
+                player?.release(); player = null; playing = false; loading = false; positionMs = 0
+            }
+
+            DisposableEffect(m.id) { onDispose { release() } }
+
+            LaunchedEffect(playing) {
+                while (playing) {
+                    positionMs = player?.currentPosition ?: 0
+                    delay(200)
+                }
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = {
                     val url = mediaUrlOf(m.mediaUrl) ?: return@IconButton
-                    if (playing) {
-                        player?.stop(); player?.release(); player = null; playing = false
+                    if (playing || loading) {
+                        release()
                     } else {
+                        loading = true
                         val mp = MediaPlayer()
                         mp.setDataSource(url)
-                        mp.setOnCompletionListener { playing = false; mp.release(); player = null }
+                        mp.setOnCompletionListener { release() }
+                        mp.setOnPreparedListener {
+                            durationMs = it.duration
+                            loading = false
+                            playing = true
+                            it.start()
+                        }
                         mp.prepareAsync()
-                        mp.setOnPreparedListener { it.start() }
                         player = mp
-                        playing = true
                     }
                 }) {
-                    Icon(if (playing) Icons.Filled.Stop else Icons.Filled.PlayArrow, contentDescription = "Lire l'audio")
+                    Icon(
+                        if (playing || loading) Icons.Filled.Stop else Icons.Filled.PlayArrow,
+                        contentDescription = "Lire l'audio",
+                    )
                 }
-                Text("Message vocal")
+                Column {
+                    Text("Message vocal")
+                    Text(
+                        when {
+                            loading -> "Chargement..."
+                            durationMs > 0 -> "${formatDuration(positionMs)} / ${formatDuration(durationMs)}"
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                    if (playing && durationMs > 0) {
+                        LinearProgressIndicator(
+                            progress = { positionMs.toFloat() / durationMs },
+                            modifier = Modifier.width(140.dp).padding(top = 2.dp),
+                        )
+                    }
+                }
             }
         }
         "FILE" -> Row(verticalAlignment = Alignment.CenterVertically) {

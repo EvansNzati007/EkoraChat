@@ -9,13 +9,24 @@ import io.socket.client.Socket
 import org.json.JSONObject
 
 object SocketManager {
-    const val MEDIA_BASE_URL = "https://ekorachat-production.up.railway.app"
-    private const val BASE_URL = "$MEDIA_BASE_URL/"
+    val MEDIA_BASE_URL = ApiClient.BASE_URL.trimEnd('/')
+    private val BASE_URL = ApiClient.BASE_URL
     private val gson = Gson()
     private val mainHandler = Handler(Looper.getMainLooper())
     private var socket: Socket? = null
 
-    fun connect(onNewMessage: (MessageDto) -> Unit) {
+    // Callbacks mutables : la connexion socket est partagée entre écrans, mais
+    // l'écran actif change (ex. navigation entre deux conversations), donc on
+    // met à jour la cible plutôt que de ré-enregistrer les listeners socket.io.
+    private var onNewMessage: (MessageDto) -> Unit = {}
+    private var onMessagesRead: (MessagesReadEvent) -> Unit = {}
+
+    fun connect(
+        onNewMessage: (MessageDto) -> Unit,
+        onMessagesRead: (MessagesReadEvent) -> Unit = {},
+    ) {
+        this.onNewMessage = onNewMessage
+        this.onMessagesRead = onMessagesRead
         if (socket?.connected() == true) return
         val token = Session.token ?: return
 
@@ -32,9 +43,27 @@ object SocketManager {
             try {
                 val json = args.firstOrNull() as? JSONObject ?: return@on
                 val message = gson.fromJson(json.toString(), MessageDto::class.java)
-                mainHandler.post { onNewMessage(message) }
+                mainHandler.post { this.onNewMessage(message) }
             } catch (e: Exception) {
                 Log.w("SocketManager", "bad newMessage payload", e)
+            }
+        }
+        s.on("presence") { args ->
+            try {
+                val json = args.firstOrNull() as? JSONObject ?: return@on
+                val event = gson.fromJson(json.toString(), PresenceEvent::class.java)
+                mainHandler.post { PresenceStore.update(event) }
+            } catch (e: Exception) {
+                Log.w("SocketManager", "bad presence payload", e)
+            }
+        }
+        s.on("messagesRead") { args ->
+            try {
+                val json = args.firstOrNull() as? JSONObject ?: return@on
+                val event = gson.fromJson(json.toString(), MessagesReadEvent::class.java)
+                mainHandler.post { this.onMessagesRead(event) }
+            } catch (e: Exception) {
+                Log.w("SocketManager", "bad messagesRead payload", e)
             }
         }
         s.connect()

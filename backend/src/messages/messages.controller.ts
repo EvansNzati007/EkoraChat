@@ -11,14 +11,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { randomUUID } from 'crypto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MessagesService } from './messages.service';
 import { MessageType } from '../generated/prisma/client';
+import { uploadInterceptorOptions } from '../common/upload.util';
+import { SendMessageDto } from './dto/send-message.dto';
 
-const ALLOWED_MIME = /^(image\/|audio\/)|^application\/(pdf|msword|vnd\.)/;
+const MAX_MEDIA_CAPTION_LENGTH = 500;
 
 @Controller('conversations/:id/messages')
 @UseGuards(JwtAuthGuard)
@@ -26,28 +25,12 @@ export class MessagesController {
   constructor(private messages: MessagesService) {}
 
   @Post()
-  send(
-    @Request() req,
-    @Param('id') id: string,
-    @Body('content') content: string,
-  ) {
-    return this.messages.send(req.user.userId, id, content);
+  send(@Request() req, @Param('id') id: string, @Body() dto: SendMessageDto) {
+    return this.messages.send(req.user.userId, id, dto.content);
   }
 
   @Post('media')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'uploads'),
-        filename: (_req, file, cb) =>
-          cb(null, `${randomUUID()}${extname(file.originalname)}`),
-      }),
-      limits: { fileSize: 20 * 1024 * 1024 },
-      fileFilter: (_req, file, cb) => {
-        cb(null, ALLOWED_MIME.test(file.mimetype));
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', uploadInterceptorOptions('messages')))
   sendMedia(
     @Request() req,
     @Param('id') id: string,
@@ -56,6 +39,7 @@ export class MessagesController {
     @Body('content') content?: string,
   ) {
     if (!file) throw new BadRequestException('Fichier manquant ou type non autorisé');
+    content = content?.slice(0, MAX_MEDIA_CAPTION_LENGTH);
     const messageType = (
       Object.values(MessageType).includes(type as MessageType)
         ? type
@@ -65,7 +49,7 @@ export class MessagesController {
       req.user.userId,
       id,
       messageType,
-      `/uploads/${file.filename}`,
+      `/uploads/messages/${file.filename}`,
       content,
     );
   }

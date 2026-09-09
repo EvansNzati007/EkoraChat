@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,7 +16,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationsScreen(onOpenChat: (id: String, title: String) -> Unit) {
+fun ConversationsScreen(
+    onOpenChat: (id: String, title: String, otherUserId: String?) -> Unit,
+    onOpenProfile: () -> Unit,
+) {
     var conversations by remember { mutableStateOf<List<ConversationDto>>(emptyList()) }
     var showAddDialog by remember { mutableStateOf(false) }
     var newContactName by remember { mutableStateOf("") }
@@ -22,17 +27,39 @@ fun ConversationsScreen(onOpenChat: (id: String, title: String) -> Unit) {
     val scope = rememberCoroutineScope()
 
     suspend fun refresh() {
-        try { conversations = ApiClient.api.listConversations() } catch (_: Exception) {}
+        try {
+            val fresh = ApiClient.api.listConversations()
+            fresh.forEach { c -> c.participants.forEach { PresenceStore.seed(it.user) } }
+            conversations = fresh
+        } catch (_: Exception) {}
     }
 
     LaunchedEffect(Unit) { refresh() }
 
+    fun otherParticipant(c: ConversationDto) = c.participants.firstOrNull { it.user.id != Session.userId }?.user
+
     fun titleOf(c: ConversationDto): String =
-        if (c.type == "AI") "🤖 Assistant IA"
-        else c.participants.firstOrNull { it.user.id != Session.userId }?.user?.username ?: "Conversation"
+        if (c.type == "AI") "🤖 Assistant IA" else otherParticipant(c)?.username ?: "Conversation"
+
+    fun previewOf(m: MessageDto?): String = when {
+        m == null -> "Aucun message"
+        m.type == "IMAGE" -> "📷 Photo"
+        m.type == "AUDIO" -> "🎤 Message vocal"
+        m.type == "FILE" -> "📎 ${m.content ?: "Fichier"}"
+        else -> m.content ?: "Aucun message"
+    }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("EkoraChat — ${Session.username}") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("EkoraChat — ${Session.username}") },
+                actions = {
+                    IconButton(onClick = onOpenProfile) {
+                        Icon(Icons.Filled.Person, contentDescription = "Profil")
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                 ExtendedFloatingActionButton(
@@ -40,7 +67,7 @@ fun ConversationsScreen(onOpenChat: (id: String, title: String) -> Unit) {
                         scope.launch {
                             try {
                                 val conv = ApiClient.api.createAI()
-                                onOpenChat(conv.id, "🤖 Assistant IA")
+                                onOpenChat(conv.id, "🤖 Assistant IA", null)
                             } catch (_: Exception) {}
                         }
                     },
@@ -52,16 +79,25 @@ fun ConversationsScreen(onOpenChat: (id: String, title: String) -> Unit) {
     ) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
             items(conversations) { c ->
+                val other = otherParticipant(c)
+                val presence = other?.let { PresenceStore.get(it.id) }
                 ListItem(
+                    leadingContent = {
+                        Avatar(
+                            url = other?.avatar?.let { SocketManager.MEDIA_BASE_URL + it },
+                            initials = titleOf(c),
+                            isOnline = if (c.type == "AI") null else presence?.isOnline ?: other?.isOnline,
+                        )
+                    },
                     headlineContent = { Text(titleOf(c)) },
                     supportingContent = {
                         Text(
-                            c.messages.firstOrNull()?.content ?: "Aucun message",
+                            previewOf(c.messages.firstOrNull()),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     },
-                    modifier = Modifier.clickable { onOpenChat(c.id, titleOf(c)) },
+                    modifier = Modifier.clickable { onOpenChat(c.id, titleOf(c), other?.id) },
                 )
                 HorizontalDivider()
             }
@@ -88,7 +124,7 @@ fun ConversationsScreen(onOpenChat: (id: String, title: String) -> Unit) {
                             val conv = ApiClient.api.createPrivate(CreatePrivateRequest(user.id))
                             showAddDialog = false; newContactName = ""; error = null
                             refresh()
-                            onOpenChat(conv.id, user.username)
+                            onOpenChat(conv.id, user.username, user.id)
                         } catch (e: Exception) {
                             error = "Cet utilisateur n'est pas sur EkoraChat"
                         }

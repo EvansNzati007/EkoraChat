@@ -7,13 +7,19 @@ backend/coverage/
 backend/.env
 backend/.env.*
 
+# Firebase — clé de service (accès admin), jamais versionnée
+backend/*firebase*adminsdk*.json
+backend/serviceAccountKey.json
+android/app/google-services.json
+
 # Prisma — client généré
 backend/generated/
 backend/src/generated/
 
 # Fichiers/médias uploadés (persistés via volume Railway en prod)
-backend/uploads/*
-!backend/uploads/.gitkeep
+backend/uploads/**
+!backend/uploads/**/
+!backend/uploads/**/.gitkeep
 
 # Android / Kotlin (pour plus tard)
 android/.gradle/

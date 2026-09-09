@@ -14,6 +14,22 @@ interface ApiService {
     @GET("users/search")
     suspend fun searchUser(@Query("username") username: String): UserDto
 
+    @GET("users/me")
+    suspend fun me(): UserDto
+
+    @PATCH("users/me")
+    suspend fun updateProfile(@Body body: UpdateProfileRequest): UserDto
+
+    @PATCH("users/me/password")
+    suspend fun changePassword(@Body body: ChangePasswordRequest): Map<String, Boolean>
+
+    @Multipart
+    @POST("users/me/avatar")
+    suspend fun uploadAvatar(@Part file: MultipartBody.Part): UserDto
+
+    @PATCH("users/me/fcm-token")
+    suspend fun updateFcmToken(@Body body: UpdateFcmTokenRequest): Map<String, Boolean>
+
     @POST("contacts")
     suspend fun addContact(@Body body: AddContactRequest): ContactDto
 
