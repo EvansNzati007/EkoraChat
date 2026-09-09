@@ -1,0 +1,65 @@
+<svg viewBox="0 0 920 480" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="arrowEnd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3A4A3E"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="920" height="480" fill="#FFFFFF"/>
+
+  <!-- Android -->
+  <rect x="30" y="170" width="200" height="160" rx="14" fill="#F6FBF4" stroke="#1B7A43" stroke-width="2.5"/>
+  <text x="130" y="200" text-anchor="middle" font-size="17" font-weight="bold" fill="#12331F">App Android</text>
+  <text x="130" y="222" text-anchor="middle" font-size="12" fill="#4E6355">Kotlin + Jetpack Compose</text>
+  <line x1="50" y1="235" x2="210" y2="235" stroke="#BFD9C8"/>
+  <text x="130" y="255" text-anchor="middle" font-size="12" fill="#3A4A3E">Retrofit / OkHttp (REST)</text>
+  <text x="130" y="275" text-anchor="middle" font-size="12" fill="#3A4A3E">socket.io-client (temps réel)</text>
+  <text x="130" y="295" text-anchor="middle" font-size="12" fill="#3A4A3E">Firebase Messaging (push)</text>
+  <text x="130" y="315" text-anchor="middle" font-size="12" fill="#3A4A3E">Coil, MediaRecorder</text>
+
+  <!-- Backend -->
+  <rect x="360" y="130" width="230" height="240" rx="14" fill="#F6FBF4" stroke="#1B7A43" stroke-width="2.5"/>
+  <text x="475" y="160" text-anchor="middle" font-size="17" font-weight="bold" fill="#12331F">Backend NestJS</text>
+  <text x="475" y="181" text-anchor="middle" font-size="12" fill="#4E6355">déployé sur Railway</text>
+  <line x1="380" y1="193" x2="570" y2="193" stroke="#BFD9C8"/>
+  <text x="475" y="213" text-anchor="middle" font-size="12" fill="#3A4A3E">Contrôleurs REST (auth, users,</text>
+  <text x="475" y="230" text-anchor="middle" font-size="12" fill="#3A4A3E">contacts, conversations, messages)</text>
+  <text x="475" y="252" text-anchor="middle" font-size="12" fill="#3A4A3E">MessagesGateway (Socket.IO)</text>
+  <text x="475" y="272" text-anchor="middle" font-size="12" fill="#3A4A3E">PushService (Firebase Admin)</text>
+  <text x="475" y="292" text-anchor="middle" font-size="12" fill="#3A4A3E">GeminiService (agent IA)</text>
+  <text x="475" y="312" text-anchor="middle" font-size="12" fill="#3A4A3E">Prisma ORM + Multer</text>
+  <text x="475" y="340" text-anchor="middle" font-size="11" fill="#7A867D">Auth par JWT (Bearer), validation</text>
+  <text x="475" y="356" text-anchor="middle" font-size="11" fill="#7A867D">stricte des entrées (class-validator)</text>
+
+  <!-- Right column services -->
+  <rect x="690" y="30" width="200" height="80" rx="14" fill="#F6FBF4" stroke="#1B7A43" stroke-width="2.5"/>
+  <text x="790" y="62" text-anchor="middle" font-size="15" font-weight="bold" fill="#12331F">PostgreSQL</text>
+  <text x="790" y="83" text-anchor="middle" font-size="12" fill="#3A4A3E">Base managée Railway</text>
+
+  <rect x="690" y="135" width="200" height="80" rx="14" fill="#F6FBF4" stroke="#1B7A43" stroke-width="2.5"/>
+  <text x="790" y="167" text-anchor="middle" font-size="15" font-weight="bold" fill="#12331F">Firebase (FCM)</text>
+  <text x="790" y="188" text-anchor="middle" font-size="12" fill="#3A4A3E">Notifications push</text>
+
+  <rect x="690" y="240" width="200" height="80" rx="14" fill="#F6FBF4" stroke="#1B7A43" stroke-width="2.5"/>
+  <text x="790" y="272" text-anchor="middle" font-size="15" font-weight="bold" fill="#12331F">API Gemini</text>
+  <text x="790" y="293" text-anchor="middle" font-size="12" fill="#3A4A3E">Agent IA conversationnel</text>
+
+  <rect x="690" y="345" width="200" height="80" rx="14" fill="#F6FBF4" stroke="#1B7A43" stroke-width="2.5"/>
+  <text x="790" y="377" text-anchor="middle" font-size="15" font-weight="bold" fill="#12331F">Volume Railway</text>
+  <text x="790" y="398" text-anchor="middle" font-size="12" fill="#3A4A3E">Fichiers uploadés (photos, audio)</text>
+
+  <!-- Edges Android <-> Backend -->
+  <path d="M230,235 L360,220" fill="none" stroke="#1B7A43" stroke-width="2.2" marker-end="url(#arrowEnd)" marker-start="url(#arrowEnd)"/>
+  <text x="255" y="215" font-size="11" fill="#3A4A3E">HTTPS (REST)</text>
+
+  <path d="M230,280 L360,260" fill="none" stroke="#1B7A43" stroke-width="2.2" marker-end="url(#arrowEnd)" marker-start="url(#arrowEnd)"/>
+  <text x="255" y="300" font-size="11" fill="#3A4A3E">WebSocket (temps réel)</text>
+
+  <!-- Edges Backend -> services -->
+  <path d="M590,190 L690,80" fill="none" stroke="#4E6355" stroke-width="2" marker-end="url(#arrowEnd)"/>
+  <path d="M590,225 L690,175" fill="none" stroke="#4E6355" stroke-width="2" marker-end="url(#arrowEnd)"/>
+  <path d="M590,280 L690,280" fill="none" stroke="#4E6355" stroke-width="2" marker-end="url(#arrowEnd)"/>
+  <path d="M590,320 L690,385" fill="none" stroke="#4E6355" stroke-width="2" marker-end="url(#arrowEnd)"/>
+
+  <text x="460" y="460" text-anchor="middle" font-size="12" fill="#7A867D">EkoraChat — architecture générale</text>
+</svg>

@@ -42,3 +42,23 @@
 Backend NestJS + PostgreSQL (Railway), app Android Kotlin/Jetpack Compose,
 connexion temps réel WebSocket + REST, agent IA Gemini branché sur les
 conversations dédiées.
+
+## Installer l'app sur un nouveau téléphone (le jour J)
+
+```bash
+cd android
+./gradlew installDebug
+```
+
+Avant de lancer cette commande :
+1. Câble USB branché entre le PC et le téléphone
+2. Débogage USB activé sur le téléphone (Paramètres → Options pour les
+   développeurs → Débogage USB — si le menu développeur n'existe pas :
+   Paramètres → À propos du téléphone → taper 7 fois sur "Numéro de build")
+3. Autoriser la popup "Autoriser le débogage USB ?" qui apparaît sur le
+   téléphone
+4. Vérifier que l'appareil est bien détecté : `adb devices` doit l'afficher
+   avec le statut `device` (pas `unauthorized`)
+
+La commande compile et installe directement l'APK, pas de fichier à
+transférer. Compter 1-2 minutes.
